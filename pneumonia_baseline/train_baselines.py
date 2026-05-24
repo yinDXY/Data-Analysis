@@ -109,6 +109,9 @@ def parse_args() -> argparse.Namespace:
                         help="bce_soft_mcc 时 BCE 项的权重")
     parser.add_argument("--mcc_weight", type=float, default=1.0,
                         help="soft_mcc / bce_soft_mcc 时 Soft MCC 项的权重")
+    # ── A 模块：WTConv 多频特征增强 ──────────────────────────────
+    parser.add_argument("--use_wtconv", action="store_true", default=False,
+                        help="启用 WTConv A 模块（仅支持 model_name=densenet121）")
     return parser.parse_args()
 
 
@@ -145,7 +148,12 @@ def _train_and_evaluate(
                                    f"{model_name}_test_predictions.csv")
 
     # ── 构建模型 ──────────────────────────────
-    model = get_model(model_name, pretrained=True).to(device)
+    use_wtconv = getattr(args, "use_wtconv", False)
+    if use_wtconv and model_name != "densenet121":
+        raise ValueError(
+            f"--use_wtconv 仅支持 densenet121，当前模型为 '{model_name}'"
+        )
+    model = get_model(model_name, pretrained=True, use_wtconv=use_wtconv).to(device)
     count_parameters(model)
 
     # ── 损失 / 优化器 / 调度器 ────────────────

@@ -48,7 +48,7 @@ CONFIG = dict(
     seed          = 42,
 
     # 输出根目录
-    output_dir    = "results_modules/C/densenet",
+    output_dir    = "results_modules/A/densenet",
 
     # ── 数据增强 ───────────────────────────────
     # 是否开启基础随机增强（随机裁剪 / 旋转 / 翻转 / 颜色抖动）
@@ -101,9 +101,20 @@ CONFIG = dict(
     #          output_dir = "results/ablation_bce_mcc"
     #
     # 切回 BCE baseline 只需把下面一行改为 loss_name = "bce"
-    loss_name   = "soft_mcc",
+    loss_name   = "bce",
     bce_weight  = 1.0,
     mcc_weight  = 1.0,
+
+    # ── A 模块：WTConv 多频特征增强 ───────────────────────────
+    #
+    # 启用 WTConv A 模块（仅支持 model_name="densenet121"）：
+    #   use_wtconv = True
+    #
+    # 消融建议：
+    #   Baseline:    use_wtconv=False, output_dir="results/densenet_baseline"
+    #   + WTConv A:  use_wtconv=True,  output_dir="results/densenet_wtconv"
+    #   其他参数（lr/epochs/loss_name/seed）保持完全一致
+    use_wtconv  = True,
 )
 
 # ─────────────────────────────────────────────

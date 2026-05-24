@@ -1,0 +1,31 @@
+[Epoch 100/100]
+  train_loss=0.0002  val_loss=0.0359  val_auc=0.9992  val_acc=0.9923  sens=0.9983  spec=0.9751  test_acc=0.8333  test_auc=0.9410  lr=1.22e-08
+
+============================================================
+  训练完成: densenet121
+  Best epoch=26  Best val_acc=0.9923
+  日志已保存: results_modules/A/densenet\logs\densenet121_training_log.csv
+============================================================
+
+[Plot] 训练曲线已保存: results_modules/A/densenet\figures\densenet121_training_curves.png
+[Plot] 独立精度曲线已保存: results_modules/A/densenet\figures\densenet121_accuracy_curve.png
+[Engine] 已加载 checkpoint: results_modules/A/densenet\checkpoints\densenet121_best.pth  (model=densenet121, epoch=26, best_val_acc=0.9923)
+                                                                                                                          
+[Test] densenet121  test_loss=1.0731
+  accuracy       : 0.8397
+  sensitivity    : 0.9974
+  specificity    : 0.5769
+  precision      : 0.7971
+  f1             : 0.8861
+  auc            : 0.9429
+  tn             : 135
+  fp             : 99
+  fn             : 1
+  tp             : 389
+[Plot] ROC 曲线已保存: results_modules/A/densenet\figures\densenet121_roc_curve.png
+[Plot] 混淆矩阵已保存: results_modules/A/densenet\confusion_matrices\densenet121_confusion_matrix.png
+[Pred] 预测结果已保存: results_modules/A/densenet\predictions\densenet121_test_predictions.csv
+
+[Summary] 汇总指标已保存: results_modules/A/densenet\logs\baseline_summary.csv
+      model  accuracy  sensitivity  specificity  precision     f1    auc  tn  fp  fn  tp
+densenet121    0.8397       0.9974       0.5769     0.7971 0.8861 0.9429 135  99   1 389

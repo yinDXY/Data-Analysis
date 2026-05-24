@@ -8,6 +8,7 @@ models.py — CNN 模型构建
 评估阶段对输出 sigmoid 即可得到概率。
 """
 
+import torch
 import torch.nn as nn
 from torchvision import models
 from torchvision.models import (
@@ -32,27 +33,42 @@ def list_supported_models():
 # 模型构建
 # ─────────────────────────────────────────────
 
-def get_model(model_name: str, pretrained: bool = True) -> nn.Module:
+def get_model(
+    model_name: str,
+    pretrained: bool = True,
+    use_wtconv: bool = False,
+) -> nn.Module:
     """构建并返回指定 backbone 的二分类模型。
 
     最后分类层替换为输出 1 个 logit 的线性层，
     配合 BCEWithLogitsLoss 使用（无需手动加 sigmoid）。
 
     Args:
-        model_name: 模型名称，见 list_supported_models()。
-        pretrained: 是否加载 ImageNet 预训练权重，默认 True。
+        model_name : 模型名称，见 list_supported_models()。
+        pretrained : 是否加载 ImageNet 预训练权重，默认 True。
+        use_wtconv : 是否启用 WTConv A 模块（仅支持 densenet121）。
 
     Returns:
         nn.Module，forward 输出 shape [batch_size]。
 
     Raises:
-        ValueError: model_name 不在支持列表中。
+        ValueError: model_name 不在支持列表中，或 use_wtconv=True 且 model_name != densenet121。
     """
     if model_name not in _SUPPORTED_MODELS:
         raise ValueError(
             f"不支持的模型: '{model_name}'。"
             f"可选模型: {_SUPPORTED_MODELS}"
         )
+
+    if use_wtconv and model_name != "densenet121":
+        raise ValueError(
+            "WTConv A module currently supports only densenet121."
+        )
+
+    if use_wtconv:
+        model = DenseNet121WTConv(pretrained=pretrained)
+        print(f"[Model] 已加载: {model_name}  |  pretrained={pretrained}  |  use_wtconv=True")
+        return model
 
     if model_name == "resnet50":
         model = _build_resnet50(pretrained)
@@ -61,7 +77,7 @@ def get_model(model_name: str, pretrained: bool = True) -> nn.Module:
     elif model_name == "efficientnet_b0":
         model = _build_efficientnet_b0(pretrained)
 
-    print(f"[Model] 已加载: {model_name}  |  pretrained={pretrained}")
+    print(f"[Model] 已加载: {model_name}  |  pretrained={pretrained}  |  use_wtconv=False")
     return model
 
 
@@ -91,6 +107,45 @@ def _build_efficientnet_b0(pretrained: bool) -> nn.Module:
     in_features = model.classifier[1].in_features  # 1280
     model.classifier[1] = nn.Linear(in_features, 1)  # 替换 classifier[1]
     return model
+
+
+# ─────────────────────────────────────────────
+# A 模块：DenseNet-121 + WTConv Feature Adapter
+# ─────────────────────────────────────────────
+
+class DenseNet121WTConv(nn.Module):
+    """DenseNet-121 + WTConv 多频特征增强适配器（A 模块）。
+
+    结构：
+        DenseNet-121 features  →  ReLU
+        → WTConvFeatureAdapter (1024→256→1024, residual)
+        → AdaptiveAvgPool2d(1)
+        → flatten
+        → Linear(1024, 1)
+
+    输出 shape [B]（单 logit），兼容 BCEWithLogitsLoss。
+    """
+
+    def __init__(self, pretrained: bool = True) -> None:
+        super().__init__()
+        # 延迟导入，避免未安装 WTConv 时影响 baseline 使用
+        from src.wtconv_adapter import WTConvFeatureAdapter
+
+        weights = DenseNet121_Weights.IMAGENET1K_V1 if pretrained else None
+        base = models.densenet121(weights=weights)
+
+        self.features   = base.features          # 输出 [B, 1024, H, W]
+        self.relu       = nn.ReLU(inplace=True)
+        self.adapter    = WTConvFeatureAdapter()  # [B,1024,H,W] → [B,1024,H,W]
+        self.pool       = nn.AdaptiveAvgPool2d(1)
+        self.classifier = nn.Linear(1024, 1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.relu(self.features(x))   # [B, 1024, H, W]
+        x = self.adapter(x)               # [B, 1024, H, W]
+        x = self.pool(x)                  # [B, 1024, 1, 1]
+        x = x.flatten(1)                  # [B, 1024]
+        return self.classifier(x)         # [B, 1]（engine 会再 .squeeze(1)）
 
 
 # ─────────────────────────────────────────────

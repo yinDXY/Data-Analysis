@@ -272,11 +272,135 @@ results/gradcam/resnet50/
 
 ---
 
-## A 模块：HybridGNet 肺部 ROI 预处理
+## A 模块：WTConv 多频特征增强
 
 ### 概述
 
-A 模块使用 [HybridGNet](https://github.com/ngaggion/HybridGNet) 从胸部 X-ray 中
+A 模块将小波卷积（Wavelet Transform Convolution，[WTConv](https://github.com/BGU-CS-VIL/WTConv)）
+以**残差适配器**的形式插入 DenseNet-121 的 features 输出之后，
+在不改变特征图尺寸的前提下对 $[B, 1024, H, W]$ 特征图进行多频域增强：
+
+- **小波分解**将特征图分解为低频全局结构和高频局部纹理；
+- **WTConv2d** 在各频带内进行卷积，有效扩大感受野，捕获跨区域肺部密度变化；
+- **残差连接**保证训练稳定性，避免引入性能退化风险。
+
+整体架构（`DenseNet121WTConv`）：
+
+```
+input image [B, 3, H, W]
+→ DenseNet-121 features         → [B, 1024, H, W]
+→ ReLU
+→ WTConvFeatureAdapter (残差)   → [B, 1024, H, W]
+→ AdaptiveAvgPool2d(1)          → [B, 1024, 1, 1]
+→ flatten                       → [B, 1024]
+→ Linear(1024, 1)               → [B]   (单 logit，配合 BCEWithLogitsLoss)
+```
+
+适配器内部结构：
+
+```
+x [B, 1024, H, W]
+→ 1×1 Conv(1024→256) → BN → ReLU
+→ WTConv2d(256, 256, kernel_size=5, wt_levels=3) → BN → ReLU
+→ 1×1 Conv(256→1024)
+→ + x   (残差)
+output [B, 1024, H, W]
+```
+
+### 目录准备
+
+WTConv 仓库需与 `pneumonia_baseline` 放在**同一根目录**：
+
+```
+project_root/
+├── pneumonia_baseline/
+└── WTConv/
+```
+
+WTConv 仓库地址：<https://github.com/BGU-CS-VIL/WTConv>
+
+### 额外依赖
+
+```bash
+pip install PyWavelets
+```
+
+WTConv 内部通过 PyWavelets 生成小波滤波器，必须安装。
+
+### 用法
+
+#### 通过 `train.py` 启动（推荐）
+
+修改 `train.py` 中的 CONFIG：
+
+```python
+# 开启 WTConv A 模块
+use_wtconv = True
+output_dir = "results_modules/A/densenet_wtconv"
+```
+
+然后运行：
+
+```bash
+python train.py
+```
+
+#### 通过 `train_baselines.py` 命令行启动
+
+```bash
+python train_baselines.py \
+  --data_dir ./dataset/chest_xray \
+  --model_name densenet121 \
+  --epochs 100 \
+  --lr 1e-4 \
+  --output_dir results_modules/A/densenet_wtconv \
+  --use_wtconv
+```
+
+#### A 模块消融对比
+
+```bash
+# Baseline（无 A 模块）
+python train_baselines.py \
+  --data_dir ./dataset/chest_xray \
+  --model_name densenet121 \
+  --epochs 100 --lr 1e-4 \
+  --output_dir results_modules/ablation/densenet_baseline
+
+# + WTConv A 模块
+python train_baselines.py \
+  --data_dir ./dataset/chest_xray \
+  --model_name densenet121 \
+  --epochs 100 --lr 1e-4 \
+  --output_dir results_modules/ablation/densenet_wtconv \
+  --use_wtconv
+```
+
+> **注意**：`--use_wtconv` 仅支持 `--model_name densenet121`，对 resnet50 / efficientnet_b0 使用时会报错。
+
+### 参数说明（`train_baselines.py`）
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--use_wtconv` | `False` | 启用 WTConv A 模块（`store_true`，无需赋值） |
+
+其余训练参数与 baseline 完全一致，见[命令行参数](#命令行参数)一节。
+
+### 代码位置
+
+| 文件 | 说明 |
+|---|---|
+| `src/wtconv_adapter.py` | `WTConvFeatureAdapter` 类（适配器主体） |
+| `src/models.py` | `DenseNet121WTConv` 类；`get_model(..., use_wtconv=True)` 路由 |
+
+---
+
+## A 模块（旧版，已废弃）：HybridGNet 肺部 ROI 预处理
+
+> **[已废弃 / Deprecated]** HybridGNet 离线 ROI 预处理方案已被 WTConv 在线特征增强
+> 方案取代。以下文档仅供历史参考，当前版本不再维护。
+
+HybridGNet A 模块使用 [HybridGNet](https://github.com/ngaggion/HybridGNet) 从胸部 X-ray 中
 预测左右肺轮廓 landmarks，生成 binary lung mask，并裁剪出肺部 ROI，
 输出与原始数据集目录结构完全一致的新数据集。
 
