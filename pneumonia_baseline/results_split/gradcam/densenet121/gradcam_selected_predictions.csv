@@ -1,0 +1,17 @@
+﻿image_path,true_label,true_class,pred_prob,pred_label,pred_class,correctness
+D:\数据挖掘课设\dataset\chest_xray\test\PNEUMONIA\person147_bacteria_707.jpeg,1,PNEUMONIA,0.9999340176582336,1,PNEUMONIA,TP
+D:\数据挖掘课设\dataset\chest_xray\test\PNEUMONIA\person141_bacteria_677.jpeg,1,PNEUMONIA,0.9999330043792725,1,PNEUMONIA,TP
+D:\数据挖掘课设\dataset\chest_xray\test\PNEUMONIA\person157_bacteria_735.jpeg,1,PNEUMONIA,0.9999240040779114,1,PNEUMONIA,TP
+D:\数据挖掘课设\dataset\chest_xray\test\PNEUMONIA\person38_virus_84.jpeg,1,PNEUMONIA,0.9999189972877502,1,PNEUMONIA,TP
+D:\数据挖掘课设\dataset\chest_xray\test\NORMAL\NORMAL2-IM-0110-0001.jpeg,0,NORMAL,9.000000318337698e-06,0,NORMAL,TN
+D:\数据挖掘课设\dataset\chest_xray\test\NORMAL\NORMAL2-IM-0129-0001.jpeg,0,NORMAL,2.2000000171829015e-05,0,NORMAL,TN
+D:\数据挖掘课设\dataset\chest_xray\test\NORMAL\IM-0070-0001.jpeg,0,NORMAL,2.9999999242136255e-05,0,NORMAL,TN
+D:\数据挖掘课设\dataset\chest_xray\test\NORMAL\IM-0025-0001.jpeg,0,NORMAL,5.2999999752501026e-05,0,NORMAL,TN
+D:\数据挖掘课设\dataset\chest_xray\test\NORMAL\IM-0022-0001.jpeg,0,NORMAL,0.9998700022697449,1,PNEUMONIA,FP
+D:\数据挖掘课设\dataset\chest_xray\test\NORMAL\NORMAL2-IM-0315-0001.jpeg,0,NORMAL,0.9998469948768616,1,PNEUMONIA,FP
+D:\数据挖掘课设\dataset\chest_xray\test\NORMAL\NORMAL2-IM-0210-0001.jpeg,0,NORMAL,0.9998409748077393,1,PNEUMONIA,FP
+D:\数据挖掘课设\dataset\chest_xray\test\NORMAL\NORMAL2-IM-0206-0001.jpeg,0,NORMAL,0.9998080134391785,1,PNEUMONIA,FP
+D:\数据挖掘课设\dataset\chest_xray\test\NORMAL\IM-0001-0001.jpeg,0,NORMAL,0.21521900594234467,0,NORMAL,TN
+D:\数据挖掘课设\dataset\chest_xray\test\NORMAL\IM-0003-0001.jpeg,0,NORMAL,0.11003799736499786,0,NORMAL,TN
+D:\数据挖掘课设\dataset\chest_xray\test\NORMAL\IM-0005-0001.jpeg,0,NORMAL,0.28196799755096436,0,NORMAL,TN
+D:\数据挖掘课设\dataset\chest_xray\test\NORMAL\IM-0006-0001.jpeg,0,NORMAL,0.9916309714317322,1,PNEUMONIA,FP

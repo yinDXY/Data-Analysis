@@ -1,0 +1,18 @@
+{
+    "data_dir": "D:\\数据挖掘课设\\dataset\\chest_xray",
+    "model_name": "efficientnet_b0",
+    "epochs": 100,
+    "batch_size": 64,
+    "lr": 0.0001,
+    "weight_decay": 0.0001,
+    "num_workers": 0,
+    "val_strategy": "split_train",
+    "val_ratio": 0.15,
+    "threshold": 0.5,
+    "seed": 42,
+    "output_dir": "results_enhanced/efficientnet",
+    "cutout": true,
+    "cutout_size": 64,
+    "mixup_alpha": 0.2,
+    "no_augment": false
+}

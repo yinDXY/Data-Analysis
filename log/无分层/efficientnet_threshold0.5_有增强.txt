@@ -1,0 +1,32 @@
+[Epoch 100/100]
+  train_loss=0.1655  val_loss=0.1713  val_auc=0.9960  val_acc=0.9361  sens=1.0000  spec=0.7512  test_acc=0.7228  test_auc=0.8742  lr=1.22e-08
+
+============================================================
+  训练完成: efficientnet_b0
+  Best epoch=10  Best val_auc=0.9980
+  日志已保存: results_enhanced/efficientnet\logs\efficientnet_b0_training_log.csv
+============================================================
+
+[Plot] 训练曲线已保存: results_enhanced/efficientnet\figures\efficientnet_b0_training_curves.png
+[Engine] 已加载 checkpoint: results_enhanced/efficientnet\checkpoints\efficientnet_b0_best.pth  (model=efficientnet_b0, epoch=10, best_val_auc=0.9980)
+                                                                                                                                       
+[Test] efficientnet_b0  test_loss=0.8537
+  accuracy       : 0.7276
+  sensitivity    : 1.0
+  specificity    : 0.2735
+  precision      : 0.6964
+  f1             : 0.8211
+  auc            : 0.9359
+  tn             : 64
+  fp             : 170
+  fn             : 0
+  tp             : 390
+[Plot] ROC 曲线已保存: results_enhanced/efficientnet\figures\efficientnet_b0_roc_curve.png
+[Plot] 混淆矩阵已保存: results_enhanced/efficientnet\confusion_matrices\efficientnet_b0_confusion_matrix.png
+[Pred] 预测结果已保存: results_enhanced/efficientnet\predictions\efficientnet_b0_test_predictions.csv
+
+[Summary] 汇总指标已保存: results_enhanced/efficientnet\logs\baseline_summary.csv
+          model  accuracy  sensitivity  specificity  precision     f1    auc  tn  fp  fn  tp
+efficientnet_b0    0.7276          1.0       0.2735     0.6964 0.8211 0.9359  64 170   0 390
+
+✓ 所有任务完成！

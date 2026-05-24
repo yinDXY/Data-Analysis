@@ -1,0 +1,2 @@
+﻿model,accuracy,sensitivity,specificity,precision,f1,auc,tn,fp,fn,tp
+resnet50,0.7917,0.9974,0.4487,0.751,0.8568,0.9458,105,129,1,389

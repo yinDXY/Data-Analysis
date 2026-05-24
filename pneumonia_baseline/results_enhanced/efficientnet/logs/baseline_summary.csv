@@ -1,0 +1,2 @@
+﻿model,accuracy,sensitivity,specificity,precision,f1,auc,tn,fp,fn,tp
+efficientnet_b0,0.7276,1.0,0.2735,0.6964,0.8211,0.9359,64,170,0,390

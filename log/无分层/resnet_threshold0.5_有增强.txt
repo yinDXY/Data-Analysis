@@ -1,0 +1,30 @@
+[Epoch 100/100]
+  train_loss=0.1547  val_loss=0.2161  val_auc=0.9916  val_acc=0.9144  sens=1.0000  spec=0.6667  test_acc=0.7372  test_auc=0.8414  lr=1.22e-08
+
+============================================================
+  训练完成: resnet50
+  Best epoch=3  Best val_auc=0.9959
+  日志已保存: results_enhanced/resnet50\logs\resnet50_training_log.csv
+============================================================
+
+[Plot] 训练曲线已保存: results_enhanced/resnet50\figures\resnet50_training_curves.png
+[Engine] 已加载 checkpoint: results_enhanced/resnet50\checkpoints\resnet50_best.pth  (model=resnet50, epoch=3, best_val_auc=0.9959)
+                                                                                                                      
+[Test] resnet50  test_loss=0.5086
+  accuracy       : 0.7917
+  sensitivity    : 0.9974
+  specificity    : 0.4487
+  precision      : 0.751
+  f1             : 0.8568
+  auc            : 0.9458
+  tn             : 105
+  fp             : 129
+  fn             : 1
+  tp             : 389
+[Plot] ROC 曲线已保存: results_enhanced/resnet50\figures\resnet50_roc_curve.png
+[Plot] 混淆矩阵已保存: results_enhanced/resnet50\confusion_matrices\resnet50_confusion_matrix.png
+[Pred] 预测结果已保存: results_enhanced/resnet50\predictions\resnet50_test_predictions.csv
+
+[Summary] 汇总指标已保存: results_enhanced/resnet50\logs\baseline_summary.csv
+   model  accuracy  sensitivity  specificity  precision     f1    auc  tn  fp  fn  tp
+resnet50    0.7917       0.9974       0.4487      0.751 0.8568 0.9458 105 129   1 389

@@ -1,0 +1,2 @@
+﻿model,accuracy,sensitivity,specificity,precision,f1,auc,tn,fp,fn,tp
+densenet121,0.7676,0.9974,0.3846,0.7298,0.8429,0.9408,90,144,1,389
