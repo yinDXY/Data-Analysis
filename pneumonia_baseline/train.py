@@ -48,20 +48,20 @@ CONFIG = dict(
     seed          = 42,
 
     # 输出根目录
-    output_dir    = "results_modules/A/densenet",
+    output_dir    = "results_modules/A+B+C/densenet_enhanced",
 
     # ── 数据增强 ───────────────────────────────
     # 是否开启基础随机增强（随机裁剪 / 旋转 / 翻转 / 颜色抖动）
-    augment       = False,
+    augment       = True,
 
     # 是否加入 Cutout 正则化（需 augment=True）
-    cutout        = False,
+    cutout        = True,
 
     # Cutout 遮挡方块边长（像素）
     cutout_size   = 64,
 
     # MixUp alpha 参数（0.0 = 不使用 MixUp，推荐 0.2~0.4）
-    mixup_alpha   = 0.0,
+    mixup_alpha   = 0.2,
 
     # ── 分层解冻（三阶段；全为 0 则普通训练） ─────────────
     #
@@ -101,7 +101,7 @@ CONFIG = dict(
     #          output_dir = "results/ablation_bce_mcc"
     #
     # 切回 BCE baseline 只需把下面一行改为 loss_name = "bce"
-    loss_name   = "bce",
+    loss_name   = "soft_mcc",
     bce_weight  = 1.0,
     mcc_weight  = 1.0,
 
@@ -115,6 +115,17 @@ CONFIG = dict(
     #   + WTConv A:  use_wtconv=True,  output_dir="results/densenet_wtconv"
     #   其他参数（lr/epochs/loss_name/seed）保持完全一致
     use_wtconv  = True,
+
+    # ── B 模块：EMA 多尺度空间注意力 ─────────────────────────
+    #
+    # 启用 EMA B 模块（仅支持 model_name="densenet121"）：
+    #   use_ema = True
+    #
+    # 消融建议：
+    #   Baseline:        use_ema=False, output_dir="results/densenet_baseline"
+    #   + EMA B:         use_ema=True,  output_dir="results/densenet_ema"
+    #   + WTConv A+B:    use_wtconv=True, use_ema=True, output_dir="results/densenet_wtconv_ema"
+    use_ema     = True,
 )
 
 # ─────────────────────────────────────────────

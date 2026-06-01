@@ -37,6 +37,7 @@ def get_model(
     model_name: str,
     pretrained: bool = True,
     use_wtconv: bool = False,
+    use_ema:    bool = False,
 ) -> nn.Module:
     """构建并返回指定 backbone 的二分类模型。
 
@@ -47,12 +48,14 @@ def get_model(
         model_name : 模型名称，见 list_supported_models()。
         pretrained : 是否加载 ImageNet 预训练权重，默认 True。
         use_wtconv : 是否启用 WTConv A 模块（仅支持 densenet121）。
+        use_ema    : 是否启用 EMA B 模块（仅支持 densenet121）。
 
     Returns:
-        nn.Module，forward 输出 shape [batch_size]。
+        nn.Module，forward 输出 shape [batch_size].
 
     Raises:
-        ValueError: model_name 不在支持列表中，或 use_wtconv=True 且 model_name != densenet121。
+        ValueError: model_name 不在支持列表中，或 use_wtconv/use_ema=True 且
+                    model_name != densenet121。
     """
     if model_name not in _SUPPORTED_MODELS:
         raise ValueError(
@@ -61,15 +64,25 @@ def get_model(
         )
 
     if use_wtconv and model_name != "densenet121":
-        raise ValueError(
-            "WTConv A module currently supports only densenet121."
-        )
+        raise ValueError("WTConv A module currently supports only densenet121.")
+    if use_ema and model_name != "densenet121":
+        raise ValueError("EMA B module currently supports only densenet121.")
+
+    # 模型实例化
+    if use_ema:
+        # B 模块（单独或与 A 模块组合）
+        model = DenseNet121EMA(pretrained=pretrained, use_wtconv=use_wtconv)
+        tags  = "use_wtconv=True, use_ema=True" if use_wtconv else "use_ema=True"
+        print(f"[Model] 已加载: {model_name}  |  pretrained={pretrained}  |  {tags}")
+        return model
 
     if use_wtconv:
+        # 仅 A 模块
         model = DenseNet121WTConv(pretrained=pretrained)
         print(f"[Model] 已加载: {model_name}  |  pretrained={pretrained}  |  use_wtconv=True")
         return model
 
+    # 原始 baseline
     if model_name == "resnet50":
         model = _build_resnet50(pretrained)
     elif model_name == "densenet121":
@@ -77,7 +90,7 @@ def get_model(
     elif model_name == "efficientnet_b0":
         model = _build_efficientnet_b0(pretrained)
 
-    print(f"[Model] 已加载: {model_name}  |  pretrained={pretrained}  |  use_wtconv=False")
+    print(f"[Model] 已加载: {model_name}  |  pretrained={pretrained}")
     return model
 
 
@@ -146,6 +159,54 @@ class DenseNet121WTConv(nn.Module):
         x = self.pool(x)                  # [B, 1024, 1, 1]
         x = x.flatten(1)                  # [B, 1024]
         return self.classifier(x)         # [B, 1]（engine 会再 .squeeze(1)）
+
+
+# ─────────────────────────────────────────────
+# B 模块：DenseNet-121 + EMA Attention
+# ─────────────────────────────────────────────
+
+class DenseNet121EMA(nn.Module):
+    """DenseNet-121 + EMA 多尺度空间注意力（B 模块）。
+
+    支持单独 B 模块和 A+B 模块组合：
+
+    B-only (use_wtconv=False)::
+        features → ReLU → EMAAttention → AvgPool → Linear
+
+    A+B (use_wtconv=True)::
+        features → ReLU → WTConvFeatureAdapter → EMAAttention → AvgPool → Linear
+
+    输出 shape [B, 1]（engine 调用 .squeeze(1) 得到 [B])。
+    """
+
+    def __init__(self, pretrained: bool = True, use_wtconv: bool = False) -> None:
+        super().__init__()
+        from src.ema_adapter import EMAAttention
+
+        weights = DenseNet121_Weights.IMAGENET1K_V1 if pretrained else None
+        base = models.densenet121(weights=weights)
+
+        self.features   = base.features                      # 输出 [B, 1024, H, W]
+        self.relu       = nn.ReLU(inplace=True)
+
+        # A 模块（可选）
+        if use_wtconv:
+            from src.wtconv_adapter import WTConvFeatureAdapter
+            self.adapter = WTConvFeatureAdapter()             # [B,1024,H,W] → [B,1024,H,W]
+        else:
+            self.adapter = nn.Identity()
+
+        self.attention  = EMAAttention(channels=1024, factor=32)  # [B,1024,H,W] → [B,1024,H,W]
+        self.pool       = nn.AdaptiveAvgPool2d(1)
+        self.classifier = nn.Linear(1024, 1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.relu(self.features(x))   # [B, 1024, H, W]
+        x = self.adapter(x)               # [B, 1024, H, W]
+        x = self.attention(x)             # [B, 1024, H, W]
+        x = self.pool(x)                  # [B, 1024, 1, 1]
+        x = x.flatten(1)                  # [B, 1024]
+        return self.classifier(x)         # [B, 1]（engine 会再 .squeeze(1))
 
 
 # ─────────────────────────────────────────────

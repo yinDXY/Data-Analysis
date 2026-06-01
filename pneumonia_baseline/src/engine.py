@@ -72,6 +72,8 @@ def train_one_epoch(
             ref_labels = labels
 
         loss.backward()
+        # 梯度裁剪：防止 Soft MCC 在极端 batch 下产生梯度尖峰
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
         optimizer.step()
 
         with torch.no_grad():

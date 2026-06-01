@@ -272,6 +272,90 @@ results/gradcam/resnet50/
 
 ---
 
+## B 模块：EMA Attention Module
+
+### 概述
+
+本项目采用 [EMA（Efficient Multi-scale Attention）](https://github.com/YOLOonMe/EMA-attention-module)
+作为 B 模块，将其接入 DenseNet-121 高层特征图之后。EMA 通过多尺度空间注意力机制对特征响应进行重标定，
+使模型更关注胸片中与肺炎相关的局部纹理、浸润阴影和肺野密度变化区域。
+
+整体架构（`DenseNet121EMA`）：
+
+```
+input image [B, 3, H, W]
+→ DenseNet-121 features         → [B, 1024, H, W]
+→ ReLU
+→ EMAAttention(1024, factor=32) → [B, 1024, H, W]   # B 模块
+→ AdaptiveAvgPool2d(1)          → [B, 1024, 1, 1]
+→ flatten                       → [B, 1024]
+→ Linear(1024, 1)               → [B, 1]  → squeeze → [B]
+```
+
+如果同时启用 A 模块（`--use_wtconv`），结构为：
+
+```
+DenseNet-121 features → ReLU → WTConvFeatureAdapter → EMAAttention → AvgPool → Linear
+```
+
+### 目录准备
+
+```
+project_root/
+├── pneumonia_baseline/
+└── EMA-attention-module/   ← 仅作参考，核心实现已复制到 src/ema_adapter.py
+```
+
+EMA 核心实现已直接复制到 `src/ema_adapter.py`（注明来源），**无需额外安装依赖**。
+若需参考原始仓库，可从 <https://github.com/YOLOonMe/EMA-attention-module> 获取。
+
+### 运行命令
+
+**DenseNet-121 baseline（无任何模块）：**
+
+```bash
+python train_baselines.py \
+  --data_dir ./dataset/chest_xray \
+  --model_name densenet121 \
+  --output_dir results/densenet121_baseline
+```
+
+**DenseNet-121 + B 模块（EMA）：**
+
+```bash
+python train_baselines.py \
+  --data_dir ./dataset/chest_xray \
+  --model_name densenet121 \
+  --use_ema \
+  --output_dir results/densenet121_ema
+```
+
+**DenseNet-121 + A 模块（WTConv）+ B 模块（EMA）：**
+
+```bash
+python train_baselines.py \
+  --data_dir ./dataset/chest_xray \
+  --model_name densenet121 \
+  --use_wtconv \
+  --use_ema \
+  --output_dir results/densenet121_wtconv_ema
+```
+
+### 参数说明
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `--use_ema` | `False` | 启用 EMA B 模块（`store_true`，无需赋值，仅支持 densenet121） |
+
+### 代码位置
+
+| 文件 | 说明 |
+|---|---|
+| `src/ema_adapter.py` | `EMAAttention` 类（B 模块主体，内含 EMA 最小实现副本） |
+| `src/models.py` | `DenseNet121EMA` 类；`get_model(..., use_ema=True)` 路由 |
+
+---
+
 ## A 模块：WTConv 多频特征增强
 
 ### 概述

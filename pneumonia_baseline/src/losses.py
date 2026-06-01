@@ -42,8 +42,10 @@ class SoftMCCWithLogitsLossWrapper(nn.Module):
         fn = torch.sum((1 - preds) * labels)
 
         numerator = tp * tn - fp * fn
-        denom = (
-            torch.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn)) + 1e-8
+        # eps 放在 sqrt 内部：保证梯度 = 1/(2*sqrt(x+eps)) 有上界
+        # 放在外面时 sqrt(0) 的梯度为 +∞，配合 MixUp 会导致 NaN
+        denom = torch.sqrt(
+            (tp + fp) * (tp + fn) * (tn + fp) * (tn + fn) + 1e-4
         )
         soft_mcc = numerator / denom
 

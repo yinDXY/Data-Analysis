@@ -1,0 +1,2 @@
+﻿model,accuracy,sensitivity,specificity,precision,f1,auc,tn,fp,fn,tp
+densenet121_wtconv_ema,0.8365,1.0,0.5641,0.7927,0.8844,0.8425,132,102,0,390

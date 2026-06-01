@@ -1,0 +1,33 @@
+[Epoch 100/100]
+  train_loss=0.0012  val_loss=0.0307  val_auc=0.9971  val_acc=0.9898  sens=0.9966  spec=0.9701  test_acc=0.8253  test_auc=0.8383  lr=1.22e-08
+
+============================================================
+  训练完成: densenet121_wtconv_ema
+  Best epoch=62  Best val_acc=0.9911
+  日志已保存: results_modules/A+B+C/densenet\logs\densenet121_wtconv_ema_training_log.csv
+============================================================
+
+[Plot] 训练曲线已保存: results_modules/A+B+C/densenet\figures\densenet121_wtconv_ema_training_curves.png
+[Plot] 独立精度曲线已保存: results_modules/A+B+C/densenet\figures\densenet121_wtconv_ema_accuracy_curve.png
+[Engine] 已加载 checkpoint: results_modules/A+B+C/densenet\checkpoints\densenet121_wtconv_ema_best.pth  (model=densenet121_wtconv_ema, epoch=62, best_val_acc=0.9911)
+                                                                                                                      
+[Test] densenet121_wtconv_ema  test_loss=0.9538
+  accuracy       : 0.8365
+  sensitivity    : 1.0
+  specificity    : 0.5641
+  precision      : 0.7927
+  f1             : 0.8844
+  auc            : 0.8425
+  tn             : 132
+  fp             : 102
+  fn             : 0
+  tp             : 390
+[Plot] ROC 曲线已保存: results_modules/A+B+C/densenet\figures\densenet121_wtconv_ema_roc_curve.png
+[Plot] 混淆矩阵已保存: results_modules/A+B+C/densenet\confusion_matrices\densenet121_wtconv_ema_confusion_matrix.png
+[Pred] 预测结果已保存: results_modules/A+B+C/densenet\predictions\densenet121_wtconv_ema_test_predictions.csv
+
+[Summary] 汇总指标已保存: results_modules/A+B+C/densenet\logs\baseline_summary.csv
+                 model  accuracy  sensitivity  specificity  precision     f1    auc  tn  fp  fn  tp
+densenet121_wtconv_ema    0.8365          1.0       0.5641     0.7927 0.8844 0.8425 132 102   0 390
+
+✓ 所有任务完成！

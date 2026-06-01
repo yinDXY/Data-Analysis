@@ -112,6 +112,9 @@ def parse_args() -> argparse.Namespace:
     # ── A 模块：WTConv 多频特征增强 ──────────────────────────────
     parser.add_argument("--use_wtconv", action="store_true", default=False,
                         help="启用 WTConv A 模块（仅支持 model_name=densenet121）")
+    # ── B 模块：EMA 多尺度空间注意力 ──────────────────────────
+    parser.add_argument("--use_ema", action="store_true", default=False,
+                        help="启用 EMA B 模块（仅支持 model_name=densenet121）")
     return parser.parse_args()
 
 
@@ -133,27 +136,43 @@ def _train_and_evaluate(
     print(f"  模型: {model_name}")
     print(f"{'#' * 60}")
 
-    # ── 输出路径 ──────────────────────────────
+    # ── 计算 run_name：用于文件命名，避免覆盖 baseline 结果 ────────
+    use_wtconv = getattr(args, "use_wtconv", False)
+    use_ema    = getattr(args, "use_ema",    False)
+    if use_wtconv and model_name != "densenet121":
+        raise ValueError(f"--use_wtconv 仅支持 densenet121，当前模型为 '{model_name}'")
+    if use_ema and model_name != "densenet121":
+        raise ValueError(f"--use_ema 仅支持 densenet121，当前模型为 '{model_name}'")
+
+    run_name = model_name
+    if use_wtconv and use_ema:
+        run_name = f"{model_name}_wtconv_ema"
+    elif use_wtconv:
+        run_name = f"{model_name}_wtconv"
+    elif use_ema:
+        run_name = f"{model_name}_ema"
+
+    # ── 输出路径 ─────────────────────────────────────────
     checkpoint_path = os.path.join(args.output_dir, "checkpoints",
-                                   f"{model_name}_best.pth")
+                                   f"{run_name}_best.pth")
     log_path        = os.path.join(args.output_dir, "logs",
-                                   f"{model_name}_training_log.csv")
+                                   f"{run_name}_training_log.csv")
     fig_curve_path  = os.path.join(args.output_dir, "figures",
-                                   f"{model_name}_training_curves.png")
+                                   f"{run_name}_training_curves.png")
     fig_roc_path    = os.path.join(args.output_dir, "figures",
-                                   f"{model_name}_roc_curve.png")
+                                   f"{run_name}_roc_curve.png")
     fig_cm_path     = os.path.join(args.output_dir, "confusion_matrices",
-                                   f"{model_name}_confusion_matrix.png")
+                                   f"{run_name}_confusion_matrix.png")
     pred_path       = os.path.join(args.output_dir, "predictions",
-                                   f"{model_name}_test_predictions.csv")
+                                   f"{run_name}_test_predictions.csv")
 
     # ── 构建模型 ──────────────────────────────
-    use_wtconv = getattr(args, "use_wtconv", False)
-    if use_wtconv and model_name != "densenet121":
-        raise ValueError(
-            f"--use_wtconv 仅支持 densenet121，当前模型为 '{model_name}'"
-        )
-    model = get_model(model_name, pretrained=True, use_wtconv=use_wtconv).to(device)
+    model = get_model(
+        model_name,
+        pretrained=True,
+        use_wtconv=use_wtconv,
+        use_ema=use_ema,
+    ).to(device)
     count_parameters(model)
 
     # ── 损失 / 优化器 / 调度器 ────────────────
@@ -197,7 +216,7 @@ def _train_and_evaluate(
                 scheduler=scheduler,
                 device=device,
                 epochs=freeze_epochs,
-                model_name=f"{model_name} [S1:head]",
+                model_name=f"{run_name} [S1:head]",
                 checkpoint_path=checkpoint_path,
                 log_path=None,
                 threshold=args.threshold,
@@ -223,7 +242,7 @@ def _train_and_evaluate(
                 scheduler=sch2,
                 device=device,
                 epochs=last_block_epochs,
-                model_name=f"{model_name} [S2:last_block]",
+                model_name=f"{run_name} [S2:last_block]",
                 checkpoint_path=checkpoint_path,
                 log_path=None,
                 threshold=args.threshold,
@@ -250,7 +269,7 @@ def _train_and_evaluate(
                 scheduler=sch3,
                 device=device,
                 epochs=remaining,
-                model_name=f"{model_name} [S3:full]",
+                model_name=f"{run_name} [S3:full]",
                 checkpoint_path=checkpoint_path,
                 log_path=None,
                 threshold=args.threshold,
@@ -277,7 +296,7 @@ def _train_and_evaluate(
             scheduler=scheduler,
             device=device,
             epochs=args.epochs,
-            model_name=model_name,
+            model_name=run_name,
             checkpoint_path=checkpoint_path,
             log_path=log_path,
             threshold=args.threshold,
@@ -285,29 +304,29 @@ def _train_and_evaluate(
             test_loader=dataloaders["test"],
         )
 
-    # ── 训练曲线 ──────────────────────────────
-    plot_training_curves(log_df, save_path=fig_curve_path, model_name=model_name)
-    # ── 独立精度图 ──────────────────────────
+    # ── 训练曲线 ─────────────────────────────────────────
+    plot_training_curves(log_df, save_path=fig_curve_path, model_name=run_name)
+    # ── 独立精度图 ──────────────────────────────────────
     fig_acc_path = os.path.join(args.output_dir, "figures",
-                                f"{model_name}_accuracy_curve.png")
-    plot_accuracy_curve(log_df, save_path=fig_acc_path, model_name=model_name)
+                                f"{run_name}_accuracy_curve.png")
+    plot_accuracy_curve(log_df, save_path=fig_acc_path, model_name=run_name)
     # ── 加载 best checkpoint → 测试集评估 ─────
     load_checkpoint(model, checkpoint_path, device)
     test_loss, test_metrics, y_true, y_prob, image_paths = evaluate(
         model, dataloaders["test"], criterion, device, threshold=args.threshold,
     )
 
-    print(f"\n[Test] {model_name}  test_loss={test_loss:.4f}")
+    print(f"\n[Test] {run_name}  test_loss={test_loss:.4f}")
     for k, v in test_metrics.items():
         print(f"  {k:<15}: {v}")
 
-    # ── 测试集 ROC & 混淆矩阵 ─────────────────
+    # ── 测试集 ROC & 混淡矩阵 ───────────────────────────
     plot_roc_curve(y_true, y_prob,
-                   save_path=fig_roc_path, model_name=model_name)
+                   save_path=fig_roc_path, model_name=run_name)
     plot_confusion_matrix(
         tn=test_metrics["tn"], fp=test_metrics["fp"],
         fn=test_metrics["fn"], tp=test_metrics["tp"],
-        save_path=fig_cm_path, model_name=model_name,
+        save_path=fig_cm_path, model_name=run_name,
     )
 
     # ── 逐样本预测结果 CSV ────────────────────
@@ -327,8 +346,8 @@ def _train_and_evaluate(
     print(f"[Pred] 预测结果已保存: {pred_path}")
 
     # ── 汇总 ──────────────────────────────────
-    summary_rows.append({"model": model_name, **test_metrics})
-    roc_data[model_name] = {"y_true": y_true, "y_prob": y_prob}
+    summary_rows.append({"model": run_name, **test_metrics})
+    roc_data[run_name] = {"y_true": y_true, "y_prob": y_prob}
 
 
 # ─────────────────────────────────────────────
