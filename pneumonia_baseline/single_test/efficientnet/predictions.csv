@@ -1,0 +1,2 @@
+﻿image_path,filename,logit,prob_pneumonia,prob_normal,pred_label,pred_class,true_label,true_class,correct
+D:\数据挖掘课设\dataset\chest_xray\test\PNEUMONIA\person1_virus_6.jpeg,person1_virus_6.jpeg,10.270535,0.999965,3.5e-05,1,PNEUMONIA,1,PNEUMONIA,1

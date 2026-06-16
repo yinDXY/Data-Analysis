@@ -1,0 +1,34 @@
+# 默认训练配置
+data_dir: ../dataset/chest_xray
+model_name: densenet121
+epochs: 10
+batch_size: 32
+lr: 0.0001
+weight_decay: 0.0001
+num_workers: 0
+val_strategy: split_train
+val_ratio: 0.15
+threshold: 0.5
+seed: 42
+output_dir: results/default
+
+# 数据增强
+augment: true
+cutout: false
+cutout_size: 64
+mixup_alpha: 0.0
+
+# 分层解冻
+freeze_epochs: 0
+last_block_epochs: 0
+finetune_lr: -1
+
+# C 模块：类别不平衡损失
+loss_name: bce
+bce_weight: 1.0
+mcc_weight: 1.0
+
+# A/B 模块
+use_wtconv: false
+use_ema: false
+

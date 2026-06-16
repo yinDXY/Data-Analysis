@@ -1,0 +1,29 @@
+{
+  "max_accuracy": {
+    "threshold": 0.69,
+    "value": 0.9898,
+    "desc": "验证集准确率最高"
+  },
+  "max_f1": {
+    "threshold": 0.69,
+    "value": 0.9932,
+    "desc": "F1-score 最高"
+  },
+  "max_youden": {
+    "threshold": 0.69,
+    "value": 0.9666999999999999,
+    "desc": "Youden's J 最高（灵敏度 + 特异度 - 1）"
+  },
+  "sens90_max_spec": {
+    "threshold": 0.69,
+    "value": 0.9701,
+    "desc": "Sensitivity ≥ 90% 时 Specificity 最高",
+    "sensitivity": 0.9966
+  },
+  "sens95_max_spec": {
+    "threshold": 0.69,
+    "value": 0.9701,
+    "desc": "Sensitivity ≥ 95% 时 Specificity 最高",
+    "sensitivity": 0.9966
+  }
+}

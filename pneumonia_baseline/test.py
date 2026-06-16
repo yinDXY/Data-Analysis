@@ -63,10 +63,10 @@ CONFIG = dict(
 
     # ── 模型 ────────────────────────────────────────────────────
     # resnet50 / densenet121 / efficientnet_b0
-    model_name      = "densenet121",
+    model_name      = "efficientnet_b0",
 
     # 训练好的 best checkpoint 路径（相对路径或绝对路径均可）
-    checkpoint_path = r"results_split\checkpoints\densenet121_best.pth",
+    checkpoint_path = r"results_split\checkpoints\efficientnet_b0_best.pth",
 
     # ── 推理参数 ─────────────────────────────────────────────────
     # sigmoid 输出 >= threshold → PNEUMONIA（建议与训练/threshold search 一致）
@@ -77,7 +77,7 @@ CONFIG = dict(
 
     # ── 输出 ────────────────────────────────────────────────────
     # 结果保存目录（None = 不保存文件，仅打印）
-    output_dir      = r"results_split\single_test",
+    output_dir      = r"single_test/efficientnet",
 
     # ── Grad-CAM ─────────────────────────────────────────────────
     # True = 生成热力图（需安装 grad-cam 库：pip install grad-cam）
